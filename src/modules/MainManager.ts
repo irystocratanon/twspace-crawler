@@ -46,24 +46,22 @@ class MainManager {
 				  	  for (let i = 0; i < 6; i++) {
 				  	  	try {
 				  	  		self.logger.debug(`Catbox@${spaceId} attempt: ${i}`)
-				  	  		//const uploader = new Litterbox();
 							let form = new FormData();
 							form.append('reqtype', 'fileupload')
+
 							// in case there are problems with userHash try to do anonymous upload
 							if (process.env.CATBOX_USER_HASH && i < 3) {
 								form.append('userhash', process.env.CATBOX_USER_HASH)
 							}
-							//const file = await readFile(audioFile)
-							//const fileData = new Blob([file])
-							//form.append('fileToUpload', fileData, audioFile.replace(/[^\x00-\x7F]/g, ""))
+							
 							const fileStream = createReadStream(audioFile)
 							form.append('fileToUpload', fileStream, audioFile.replace(/[^\x00-\x7F]/g, ""))
-				  	  		//const upload_it = await axios.post('https://catbox.moe/user/api.php', form, {headers: {...form.getHeaders()}})
 				  	  		const upload_it = await axios.post('https://catbox.moe/user/api.php', form, {
 								maxContentLength: Infinity,
 								maxBodyLength: Infinity,
 								headers: {'Content-Type': 'multipart/form-data;boundary=' + form.getBoundary()}
 							})
+
 				  	  		const save_url = `${audioFile.substr(0, audioFile.lastIndexOf(".m4a"))} catbox.txt`
 							const saved_it = upload_it.data
 				  	  		self.logger.info(`SpaceWatcher@${spaceId} ${saved_it}`)
