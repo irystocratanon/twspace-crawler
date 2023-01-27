@@ -313,8 +313,11 @@ export class SpaceWatcher extends EventEmitter {
           metadata,
         )
       }
-      await this.downloader.download()
-      this.emit('complete')
+      const downloader_proc = await this.downloader.download()
+	  const self = this
+	  downloader_proc.on('close', () => {
+		  self.emit('complete')
+	  });
     } catch (error) {
       const ms = 10000
       // Attemp to download transcode playlist right after space end could return 404
