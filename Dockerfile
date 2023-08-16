@@ -1,29 +1,19 @@
-# Build
-
-FROM node:18-alpine AS base
-
+FROM node:18-bullseye as build-env
+COPY . /app
 WORKDIR /app
 
-COPY . /app/
+RUN npm install
+RUN rm -rf node_modules && npm install --omit=dev --ignore-scripts
+RUN mkdir -pv /tools && cd /tools && wget -q -O - https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz | xzcat | tar --strip-components=1 -xf - && /tools/ffmpeg -version
 
-RUN npm pkg delete scripts.prepare
+FROM gcr.io/distroless/nodejs18-debian11
 
-RUN npm ci
-RUN npm run build
-
-# Production
-
-FROM node:18-alpine AS runner
-
-ENV NODE_ENV=production
-
+COPY --from=build-env /app/package.json /package.json
+COPY --from=build-env /app/dist /app
+COPY --from=build-env /app/node_modules /app/node_modules
+COPY --from=build-env /tools/ffmpeg /tools/ffmpeg
+#ADD busybox.static /busybox.static
 WORKDIR /app
 
-RUN apk add --no-cache ffmpeg
-
-COPY --from=base /app/package.json /app/package-lock.json /app/
-COPY --from=base /app/dist /app/dist
-
-RUN npm ci
-
-CMD ["node", "dist/index", "--env", "/app/.env", "--config", "/app/config.yaml"]
+ENV PATH /tools:/nodejs/bin/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENTRYPOINT ["/nodejs/bin/node", "/app/index.js"]

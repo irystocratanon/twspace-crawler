@@ -31,7 +31,7 @@ export class SpaceDownloader {
     this.logger.verbose(`Audio path: "${this.audioFile}"`)
   }
 
-  public async download() {
+  public async download() : Promise<any> {
     this.logger.debug('download', { playlistUrl: this.playlistUrl, originUrl: this.originUrl })
     if (!this.playlistUrl) {
       this.playlistUrl = await PeriscopeApi.getFinalPlaylistUrl(this.originUrl)
@@ -40,7 +40,7 @@ export class SpaceDownloader {
     // Util.createMediaDir(this.subDir)
     // await this.saveFinalPlaylist()
     Util.createMediaDir(this.subDir)
-    this.spawnFfmpeg()
+    return this.spawnFfmpeg()
   }
 
   private async saveFinalPlaylist() {
